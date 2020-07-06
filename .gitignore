@@ -1,0 +1,7 @@
+# Created by .ignore support plugin (hsz.mobi)
+/hdctl
+/config.json
+/hdctl.iml
+/.idea/
+/pkg/
+/src/
