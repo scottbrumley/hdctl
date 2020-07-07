@@ -8,9 +8,48 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
+
+// Helper Functions
+func ValidIP4(ipAddress string) bool {
+	ipAddress = strings.Trim(ipAddress, " ")
+	re, _ := regexp.Compile(`^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$`)
+
+	// Is a valid IP Address
+	if re.MatchString(ipAddress) {
+		// Test the octet ranges
+		octets := strings.Split(ipAddress, ".")
+
+		for i := range octets {
+			octet, err := strconv.Atoi(octets[i])
+			if err != nil {
+				log.Fatalln(err)
+			}
+
+			if octet > 255 {
+				return false
+			}
+			if octet < 0 {
+				return false
+			}
+		}
+		return true
+	}
+
+	return false
+}
+func validHost(host string) bool {
+	host = strings.Trim(host, " ")
+	re, _ := regexp.Compile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$`)
+	if re.MatchString(host) {
+		return true
+	}
+	return false
+}
 
 //define a function for the default message handler
 var f mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
@@ -74,7 +113,7 @@ func SubscribeCtl(client mqtt.Client, c chan string) {
 			//brokerconfig := "{\"name\": \"configuration\",\"brokers\": [\"192.168.192.10\"],\"hubs\": [\"192.168.192.185\"]}"
 			pingCMD := "{\"commands\": [\"https://192.168.192.185/api/config\",\"https://192.168.192.56/api/config\",\"https://192.168.192.58/api/config\"]}"
 			PublishCtl(client, procID, pingCMD)
-			c <- pingCMD
+			c <- procID
 			return
 		}
 	}); token.Wait() && token.Error() != nil {
@@ -82,7 +121,6 @@ func SubscribeCtl(client mqtt.Client, c chan string) {
 	}
 	return
 }
-
 func Unsubscribe(client mqtt.Client) {
 	// Unscribe
 	if token := client.Unsubscribe("hacmd/#"); token.Wait() && token.Error() != nil {
@@ -90,7 +128,11 @@ func Unsubscribe(client mqtt.Client) {
 		os.Exit(1)
 	}
 }
-
+func Disconnect(client mqtt.Client) {
+	// Disconnect
+	client.Disconnect(250)
+	time.Sleep(1 * time.Second)
+}
 func PublishCtl(client mqtt.Client, procID string, msg string) {
 	// Send Configuration
 	fmt.Println("Sending configurations to hacmd/" + procID)
