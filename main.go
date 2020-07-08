@@ -1,14 +1,21 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"time"
 )
 
 func main() {
 	c := make(chan string)
-	user, pass, broker := ReadConfig("config.json")
+	user, pass, broker, mongoDB := ReadConfig("config.json")
 	client := connect_mqtt(broker, user, pass)
+	mongoClient := connect_mongoDB(mongoDB)
+
+	//Checking the connection
+	mongoClient.Ping(context.TODO(), nil)
+	fmt.Println("Database connected")
+
 	// Subscribe to a topic
 	go SubscribeCtl(client, c)
 	procID := <-c

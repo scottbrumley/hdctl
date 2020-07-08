@@ -1,10 +1,13 @@
 package main
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/json"
 	"fmt"
 	"github.com/eclipse/paho.mqtt.golang"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"io/ioutil"
 	"log"
 	"os"
@@ -58,8 +61,7 @@ var f mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
 }
 
 // Main Functions
-func ReadConfig(configstr string) (user string, pass string, broker string) {
-
+func ReadConfig(configstr string) (user string, pass string, broker string, mongoDB string) {
 	plan, _ := ioutil.ReadFile(configstr)
 	var data map[string]interface{}
 	err := json.Unmarshal(plan, &data)
@@ -70,6 +72,7 @@ func ReadConfig(configstr string) (user string, pass string, broker string) {
 	user = data["user"].(string)
 	pass = data["pass"].(string)
 	broker = data["broker"].(string)
+	mongoDB = data["mongoDB"].(string)
 	return
 }
 func ProcUUID() (uuid string) {
@@ -82,7 +85,7 @@ func ProcUUID() (uuid string) {
 		b[0:4], b[4:6], b[6:8], b[8:10], b[10:])
 	return
 }
-func connect_mqtt(broker string, user string, pass string) (c mqtt.Client) {
+func connect_mqtt(broker string, user string, pass string) (client mqtt.Client) {
 
 	//create a ClientOptions struct setting the broker address, clientid, turn
 	//off trace output and set the default message handler
@@ -92,13 +95,31 @@ func connect_mqtt(broker string, user string, pass string) (c mqtt.Client) {
 	opts.SetUsername(user)
 	opts.SetPassword(pass)
 	//create and start a client using the above ClientOptions
-	c = mqtt.NewClient(opts)
-	if token := c.Connect(); token.Wait() && token.Error() != nil {
+	client = mqtt.NewClient(opts)
+	if token := client.Connect(); token.Wait() && token.Error() != nil {
 		panic(token.Error())
 	}
 
 	return
 
+}
+func connect_mongoDB(mongoDB string) (client *mongo.Client) {
+	//Set up a context required by mongo.Connect
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	//To close the connection at the end
+	defer cancel()
+	//We need to set up a client first
+	//It takes the URI of your database
+	client, error := mongo.NewClient(options.Client().ApplyURI(mongoDB))
+	if error != nil {
+		log.Fatal(error)
+	}
+	//Call the connect function of client
+	error = client.Connect(ctx)
+	//Checking the connection
+	error = client.Ping(context.TODO(), nil)
+	fmt.Println("Database connected")
+	return
 }
 func SubscribeCtl(client mqtt.Client, c chan string) {
 	if token := client.Subscribe("hacmd/#", 0, func(client mqtt.Client, msg mqtt.Message) {
