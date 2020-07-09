@@ -61,12 +61,14 @@ var f mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
 }
 
 type hacmdInit struct {
-	ProcID string `json:"procID"`
-	Action string `json:"action"`
+	ProcID  string `json:"procID"`
+	Action  string `json:"action"`
+	Command string `json:"command"`
+	Result  string `json:"result"`
 }
 
 // Main Functions
-func readCtrl(configstr string) (procID string, action string) {
+func readCtrl(configstr string) (procID string, action string, command string, result string) {
 	res := hacmdInit{}
 	err := json.Unmarshal([]byte(configstr), &res)
 	if err != nil {
@@ -74,6 +76,8 @@ func readCtrl(configstr string) (procID string, action string) {
 	}
 	procID = res.ProcID
 	action = res.Action
+	command = res.Command
+	result = res.Result
 	return
 }
 func ReadConfig(configstr string) (user string, pass string, broker string, mongoDB string) {

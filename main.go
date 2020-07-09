@@ -3,13 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 )
 
 func main() {
-	var procID string
-	var action string
 	ctrlch1 := make(chan string)
 	//cmdch1 := make(chan string)
 	user, pass, broker, mongoDB := ReadConfig("config.json")
@@ -27,11 +24,8 @@ func main() {
 		//fmt.Println("hacmd: " + <-procID + " msg: " + <-ctrlch1)
 		select {
 		case msgStr := <-ctrlch1:
-
-			if len(msgStr) > 0 {
-				procID, action = readCtrl(msgStr)
-			}
-			//fmt.Println(msgStr + " message. ")
+			procID, action, _, _ := readCtrl(msgStr)
+			//procID, action, command, result := readCtrl(msgStr)
 			// If intiation strings match then return configuration
 			if action == "initiate" {
 				fmt.Println(procID + " Initiated")
@@ -40,8 +34,11 @@ func main() {
 				go PublishTo("hacmd/cmd", client, pingCMD)
 			}
 
-			if strings.Contains(msgStr, "sensors") {
-				fmt.Println("Received Sensors Results")
+			if action == "result" {
+				//fmt.Println("Received Sensors Results")
+				//fmt.Println(command)
+				//fmt.Println(result)
+
 			}
 
 		//Issue Sensor Commands
