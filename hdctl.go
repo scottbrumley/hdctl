@@ -65,12 +65,6 @@ type hacmdInit struct {
 	Action string `json:"action"`
 }
 
-/*
-type confighacmd struct {
-	Commands []string `json:"commands"`
-}
-*/
-
 // Main Functions
 func readCtrl(configstr string) (procID string, action string) {
 	res := hacmdInit{}
