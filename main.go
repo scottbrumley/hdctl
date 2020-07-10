@@ -30,7 +30,8 @@ func main() {
 			if action == "initiate" {
 				fmt.Println(procID + " Initiated")
 				fmt.Println(time.Now().Format(time.RFC850) + " hacmd/ctrl just checked in.")
-				pingCMD := "{\"procid\":\"" + procID + "\",\"commands\": [\"https://192.168.192.185/api/config\",\"https://192.168.192.56/api/config\",\"https://192.168.192.58/api/config\"]}"
+				pingCMD := "{\"procid\":\"" + procID + "\",\"commands\": [{\"url\": \"https://192.168.192.55/api/config\",\"hubid\": \"001788FFFE277094\"},{\"url\": \"https://192.168.192.56/api/config\",\"hubid\": \"ECB5FAFFFE10C52F\"},{\"url\": \"https://192.168.192.58/api/config\",\"hubid\": \"ECB5FAFFFE0DA7C7\"}]}"
+
 				go PublishTo("hacmd/cmd", client, pingCMD)
 			}
 
@@ -43,7 +44,8 @@ func main() {
 
 		//Issue Sensor Commands
 		case <-time.After(60 * time.Second):
-			pingCMD := "{\"procid\":\"3edb99fa-5be6-7cc3-025b-b834efe62fd9\",\"commands\": [\"https://192.168.192.185/api/vw6OE0D7kDffGeMpA5JXhHuQZaXMtX8Jh8zcEyyb/sensors\",\"https://192.168.192.56/api/OdZrhUY-514oY5iuhkg4lFgm0iL6qRlCIAAqvA3y/sensors\",\"https://192.168.192.58/api/Yj3knZa5VWYGLYo6n7TAOVWrRW-3VK9Un1UALd9t/sensors\"]}"
+			pingCMD := "{\"procid\":\"3edb99fa-5be6-7cc3-025b-b834efe62fd9\",\"commands\": [{\"url\": \"https://192.168.192.55/api/vw6OE0D7kDffGeMpA5JXhHuQZaXMtX8Jh8zcEyyb/sensors\",\"hubid\": \"001788FFFE277094\"},{\"url\": \"https://192.168.192.56/api/OdZrhUY-514oY5iuhkg4lFgm0iL6qRlCIAAqvA3y/sensors\",\"hubid\": \"ECB5FAFFFE10C52F\"},{\"url\": \"https://192.168.192.58/api/Yj3knZa5VWYGLYo6n7TAOVWrRW-3VK9Un1UALd9t/sensors\",\"hubid\": \"ECB5FAFFFE0DA7C7\"}]}"
+
 			go PublishTo("hacmd/cmd", client, pingCMD)
 		}
 	}
