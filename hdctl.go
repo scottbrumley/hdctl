@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/eclipse/paho.mqtt.golang"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"io/ioutil"
@@ -61,26 +62,28 @@ var f mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
 }
 
 type hacmdInit struct {
-	ProcID  string `json:"procID"`
-	Action  string `json:"action"`
-	Command string `json:"command"`
-	Result  string `json:"result"`
+	ProcID  string                 `json:"procid"`
+	HubID   string                 `json:"hubid"`
+	Action  string                 `json:"action"`
+	Command string                 `json:"command"`
+	Results map[string]interface{} `json:"results"`
 }
 
 // Main Functions
-func readCtrl(configstr string) (procID string, action string, command string, result string) {
+func readCtrl(configstr string) (procID string, hubid string, action string, command string, results map[string]interface{}) {
 	res := hacmdInit{}
 	err := json.Unmarshal([]byte(configstr), &res)
 	if err != nil {
 		log.Fatalln(err)
 	}
 	procID = res.ProcID
+	hubid = res.HubID
 	action = res.Action
 	command = res.Command
-	result = res.Result
+	results = res.Results
 	return
 }
-func ReadConfig(configstr string) (user string, pass string, broker string, mongoDB string) {
+func ReadConfig(configstr string) (user string, pass string, broker string, procID, mongoDB string) {
 	plan, _ := ioutil.ReadFile(configstr)
 	var data map[string]interface{}
 	err := json.Unmarshal(plan, &data)
@@ -91,6 +94,7 @@ func ReadConfig(configstr string) (user string, pass string, broker string, mong
 	user = data["user"].(string)
 	pass = data["pass"].(string)
 	broker = data["broker"].(string)
+	procID = data["procID"].(string)
 	mongoDB = data["mongoDB"].(string)
 	return
 }
@@ -139,6 +143,49 @@ func connect_mongoDB(mongoDB string) (client *mongo.Client) {
 	error = client.Ping(context.TODO(), nil)
 	fmt.Println("Database connected")
 	return
+}
+func updateOne_mongoDB(mongoClient *mongo.Client, dbStr string, collectionStr string, hubid string, retval map[string]interface{}) {
+	//Set up a context required by mongo.Connect
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	//To close the connection at the end
+	defer cancel()
+	// Update Sensor Database
+	SensorsCollection := mongoClient.Database(dbStr).Collection(collectionStr)
+	filter := bson.D{{"hubid", hubid}}
+	// Need to specify the mongodb output operator too
+	newName := bson.D{
+		{"$set", bson.D{
+			{collectionStr, retval},
+		}},
+	}
+	res, err := SensorsCollection.UpdateOne(ctx, filter, newName)
+	if err != nil {
+		log.Fatal(err)
+	}
+	updatedObject := *res
+	fmt.Printf("Modified count is : %d", updatedObject.ModifiedCount)
+	//fmt.Printf("The matched count is : %d, the modified count is : %d", updatedObject.MatchedCount, updatedObject.ModifiedCount)
+
+}
+func find_mongoDB(mongoClient *mongo.Client, dbStr string, collectionStr string, procid string) (retStr []bson.M) {
+	// Collection to retrieve from
+	Collection := mongoClient.Database(dbStr).Collection(collectionStr)
+
+	//fmt.Printf("The matched count is : %d, the modified count is : %d", updatedObject.MatchedCount, updatedObject.ModifiedCount)
+	// find all documents in which the "name" field is "Bob"
+	// specify the Sort option to sort the returned documents by age in ascending order
+	cursor, err := Collection.Find(context.TODO(), bson.D{{"procid", procid}})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// get a list of all returned documents and print them out
+	// see the mongo.Cursor documentation for more examples of using cursors
+	var results []bson.M
+	if err = cursor.All(context.TODO(), &results); err != nil {
+		log.Fatal(err)
+	}
+	return results
 }
 func SubscribeTo(topic string, client mqtt.Client, c chan string) {
 	if token := client.Subscribe(topic, 0, func(client mqtt.Client, msg mqtt.Message) {
