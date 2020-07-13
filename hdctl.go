@@ -61,6 +61,17 @@ var f mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
 	fmt.Printf("MSG: %s\n", msg.Payload())
 }
 
+type jobsStruct struct {
+	JobID    int        `json:"jobid"`
+	Trigger  string     `json:"trigger"`
+	ProcID   string     `json:"procid"`
+	Commands []Commands `json:"commands"`
+}
+type Commands struct {
+	URL   string `json:"url"`
+	Hubid string `json:"hubid"`
+}
+
 type hacmdInit struct {
 	ProcID  string                 `json:"procid"`
 	HubID   string                 `json:"hubid"`
@@ -167,25 +178,35 @@ func updateOne_mongoDB(mongoClient *mongo.Client, dbStr string, collectionStr st
 	//fmt.Printf("The matched count is : %d, the modified count is : %d", updatedObject.MatchedCount, updatedObject.ModifiedCount)
 
 }
-func find_mongoDB(mongoClient *mongo.Client, dbStr string, collectionStr string, procid string) (retStr []bson.M) {
+func find_mongoDB(mongoClient *mongo.Client, dbStr string, collectionStr string, procid string) (results []string) {
+	//Set up a context required by mongo.Connect
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	//To close the connection at the end
+	defer cancel()
+
 	// Collection to retrieve from
 	Collection := mongoClient.Database(dbStr).Collection(collectionStr)
 
-	//fmt.Printf("The matched count is : %d, the modified count is : %d", updatedObject.MatchedCount, updatedObject.ModifiedCount)
-	// find all documents in which the "name" field is "Bob"
-	// specify the Sort option to sort the returned documents by age in ascending order
-	cursor, err := Collection.Find(context.TODO(), bson.D{{"procid", procid}})
-	if err != nil {
-		log.Fatal(err)
+	cur, error := Collection.Find(ctx, bson.D{{"procid", procid}})
+	var alljobs []*jobsStruct
+	//Loops over the cursor stream and appends to result array
+	for cur.Next(context.TODO()) {
+		var jobResult jobsStruct
+		err := cur.Decode(&jobResult)
+		if err != nil {
+			log.Fatal(error)
+		}
+		alljobs = append(alljobs, &jobResult)
+	}
+	//dont forget to close the cursor
+	defer cur.Close(context.TODO())
+
+	for _, element := range alljobs {
+		res2B, _ := json.Marshal(element)
+		results = append(results, string(res2B))
 	}
 
-	// get a list of all returned documents and print them out
-	// see the mongo.Cursor documentation for more examples of using cursors
-	var results []bson.M
-	if err = cursor.All(context.TODO(), &results); err != nil {
-		log.Fatal(err)
-	}
-	return results
+	return
 }
 func SubscribeTo(topic string, client mqtt.Client, c chan string) {
 	if token := client.Subscribe(topic, 0, func(client mqtt.Client, msg mqtt.Message) {

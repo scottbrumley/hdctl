@@ -67,12 +67,10 @@ func main() {
 		case <-time.After(60 * time.Second):
 			fmt.Println("Check Jobs")
 			results := find_mongoDB(mongoClient, "homeSysDB", "jobs", brokerID)
-			for _, result := range results {
-				fmt.Println(result)
-			}
 
-			//pingCMD := "{\"procid\":\"3edb99fa-5be6-7cc3-025b-b834efe62fd9\",\"commands\": [{\"url\": \"https://192.168.192.55/api/vw6OE0D7kDffGeMpA5JXhHuQZaXMtX8Jh8zcEyyb/sensors\",\"hubid\": \"001788FFFE277094\"},{\"url\": \"https://192.168.192.56/api/OdZrhUY-514oY5iuhkg4lFgm0iL6qRlCIAAqvA3y/sensors\",\"hubid\": \"ECB5FAFFFE10C52F\"},{\"url\": \"https://192.168.192.58/api/Yj3knZa5VWYGLYo6n7TAOVWrRW-3VK9Un1UALd9t/sensors\",\"hubid\": \"ECB5FAFFFE0DA7C7\"}]}"
-			//go PublishTo("hacmd/cmd", client, pingCMD)
+			for _, job := range results {
+				go PublishTo("hacmd/cmd", client, job)
+			}
 		}
 	}
 }
