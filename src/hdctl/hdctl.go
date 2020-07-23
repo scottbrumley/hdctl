@@ -65,6 +65,7 @@ type jobsStruct struct {
 	JobID    int        `json:"jobid"`
 	Trigger  string     `json:"trigger"`
 	ProcID   string     `json:"procid"`
+	Action   string     `json:"action"`
 	Commands []Commands `json:"commands"`
 }
 type Commands struct {
