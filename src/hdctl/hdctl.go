@@ -62,11 +62,12 @@ var f mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
 }
 
 type jobsStruct struct {
-	JobID    int        `json:"jobid"`
-	Trigger  string     `json:"trigger"`
-	ProcID   string     `json:"procid"`
-	Action   string     `json:"action"`
-	Commands []Commands `json:"commands"`
+	JobID      int        `json:"jobid"`
+	Trigger    string     `json:"trigger"`
+	ProcID     string     `json:"procid"`
+	Action     string     `json:"action"`
+	ActionType string     `json:"actiontype"`
+	Commands   []Commands `json:"commands"`
 }
 type Commands struct {
 	URL       string `json:"url"`
@@ -75,11 +76,12 @@ type Commands struct {
 }
 
 type hacmdInit struct {
-	ProcID  string                 `json:"procid"`
-	HubID   string                 `json:"hubid"`
-	Action  string                 `json:"action"`
-	Command string                 `json:"command"`
-	Results map[string]interface{} `json:"results"`
+	ProcID     string                 `json:"procid"`
+	HubID      string                 `json:"hubid"`
+	Action     string                 `json:"action"`
+	ActionType string                 `json:"actiontype"`
+	Command    string                 `json:"command"`
+	Results    map[string]interface{} `json:"results"`
 }
 
 type hactl struct {
