@@ -21,7 +21,7 @@ func main() {
 				if action == "initiate" {
 					fmt.Println(procID + " Initiated")
 					fmt.Println(time.Now().Format(time.RFC850) + " hacmd/ctrl just checked in.")
-					pingCMD := "{\"procid\":\"" + procID + "\",\"commands\": [{\"url\": \"https://192.168.192.55/api/config\",\"hubid\": \"001788FFFE277094\"},{\"url\": \"https://192.168.192.56/api/config\",\"hubid\": \"ECB5FAFFFE10C52F\"},{\"url\": \"https://192.168.192.58/api/config\",\"hubid\": \"ECB5FAFFFE0DA7C7\"}]}"
+					pingCMD := "{\"procid\":\"" + procID + "\",\"action\":\"config\", \"commands\": [{\"url\": \"https://192.168.192.55/api/config\",\"hubid\": \"001788FFFE277094\",\"vendortag\": \"hue\"},{\"url\": \"https://192.168.192.56/api/config\",\"hubid\": \"ECB5FAFFFE10C52F\",\"vendortag\": \"hue\"},{\"url\": \"https://192.168.192.58/api/config\",\"hubid\": \"ECB5FAFFFE0DA7C7\",\"vendortag\": \"hue\"}]}"
 					go controlCenter.SendCommands(pingCMD)
 				}
 				if action == "result" {
@@ -33,7 +33,6 @@ func main() {
 						case "sensors":
 							// Update the Sensor Details
 							controlCenter.UpdateSensors(hubid, retval)
-							//hdctl.updateOne_mongoDB(mongoClient, "homeSysDB", "sensors", hubid, retval)
 						case "config":
 							// Update Configuration Database
 
