@@ -21,8 +21,10 @@ func main() {
 				if action == "initiate" {
 					fmt.Println(procID + " Initiated")
 					fmt.Println(time.Now().Format(time.RFC850) + " hacmd/ctrl just checked in.")
-					pingCMD := "{\"procid\":\"" + procID + "\",\"action\":\"api\",\"actiontype\":\"config\", \"commands\": [{\"url\": \"https://192.168.192.55/api/config\",\"hubid\": \"001788FFFE277094\",\"vendortag\": \"hue\"},{\"url\": \"https://192.168.192.56/api/config\",\"hubid\": \"ECB5FAFFFE10C52F\",\"vendortag\": \"hue\"},{\"url\": \"https://192.168.192.58/api/config\",\"hubid\": \"ECB5FAFFFE0DA7C7\",\"vendortag\": \"hue\"}]}"
-					go controlCenter.SendCommands(pingCMD)
+					results := controlCenter.FindJobs(controlCenter.ProcID, "config")
+					for _, job := range results {
+						go controlCenter.SendCommands(job)
+					}
 				}
 				if action == "result" {
 					commandStr := strings.Split(command, "/")
@@ -56,7 +58,7 @@ func main() {
 		case <-time.After(60 * time.Second):
 			fmt.Println("Check Jobs")
 			//results := hdctl.find_mongoDB(mongoClient, "homeSysDB", "jobs", brokerID)
-			results := controlCenter.FindJobs(controlCenter.ProcID)
+			results := controlCenter.FindJobs(controlCenter.ProcID, "command")
 			for _, job := range results {
 				go controlCenter.SendCommands(job)
 			}

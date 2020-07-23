@@ -115,8 +115,8 @@ func (controlCenter hactl) SendCommands(msg string) {
 func (controlCenter hactl) UpdateSensors(hubid string, sensorVal map[string]interface{}) {
 	updateOne_mongoDB(controlCenter.mongoClient, "homeSysDB", "sensors", hubid, sensorVal)
 }
-func (controlCenter hactl) FindJobs(brokerId string) (results []string) {
-	results = find_mongoDB(controlCenter.mongoClient, "homeSysDB", "jobs", brokerId)
+func (controlCenter hactl) FindJobs(brokerId string, actiontype string) (results []string) {
+	results = find_mongoDB(controlCenter.mongoClient, "homeSysDB", "jobs", brokerId, actiontype)
 	return results
 }
 func ReadCtrl(configstr string) (procID string, hubid string, action string, command string, results map[string]interface{}) {
@@ -216,7 +216,7 @@ func updateOne_mongoDB(mongoClient *mongo.Client, dbStr string, collectionStr st
 	//fmt.Printf("The matched count is : %d, the modified count is : %d", updatedObject.MatchedCount, updatedObject.ModifiedCount)
 
 }
-func find_mongoDB(mongoClient *mongo.Client, dbStr string, collectionStr string, procid string) (results []string) {
+func find_mongoDB(mongoClient *mongo.Client, dbStr string, collectionStr string, procid string, actionStr string) (results []string) {
 	//Set up a context required by mongo.Connect
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	//To close the connection at the end
@@ -225,7 +225,12 @@ func find_mongoDB(mongoClient *mongo.Client, dbStr string, collectionStr string,
 	// Collection to retrieve from
 	Collection := mongoClient.Database(dbStr).Collection(collectionStr)
 
-	cur, error := Collection.Find(ctx, bson.D{{"procid", procid}})
+	searchStr := bson.D{{"procid", procid}}
+	if actionStr != "" {
+		searchStr = bson.D{{"procid", procid}, {"actiontype", actionStr}}
+	}
+
+	cur, error := Collection.Find(ctx, searchStr)
 	var alljobs []*jobsStruct
 	//Loops over the cursor stream and appends to result array
 	for cur.Next(context.TODO()) {
