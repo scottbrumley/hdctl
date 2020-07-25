@@ -16,7 +16,6 @@ func main() {
 		case msgStr := <-controlCenter.CtrlMessages:
 			if json.Valid([]byte(msgStr)) {
 				procID, hubid, action, command, retval := hdctl.ReadCtrl(msgStr)
-				//procID, action, command, result := readCtrl(msgStr)
 				// If intiation strings match then return configuration
 				if action == "initiate" {
 					fmt.Println(procID + " Initiated")
