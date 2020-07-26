@@ -11,6 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"regexp"
 	"strconv"
@@ -91,6 +92,7 @@ type hactl struct {
 	mongoClient  *mongo.Client
 }
 
+// Main Functions
 func New(configStr string) hactl {
 	ch1 := make(chan string)
 	user, pass, broker, procID, mongoDB := ReadConfig("config.json")
@@ -104,10 +106,17 @@ func New(configStr string) hactl {
 	// Subscribe to a topic
 	go SubscribeTo("hacmd/ctrl", mqttClient, ch1)
 	ctrlProc := hactl{procID, ch1, mqttClient, mongoClient}
+	go handleRequests()
 	return ctrlProc
 }
-
-// Main Functions
+func homePage(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Welcome to the HomePage!")
+	fmt.Println("Endpoint Hit: homePage")
+}
+func handleRequests() {
+	http.HandleFunc("/", homePage)
+	log.Fatal(http.ListenAndServe(":10000", nil))
+}
 func (controlCenter hactl) SendCommands(msg string) {
 	topic := "hacmd/cmd"
 	fmt.Println(time.Now().Format(time.RFC850) + " Sending command " + msg + " to " + topic)
