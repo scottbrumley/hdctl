@@ -110,6 +110,7 @@ func New(configStr string) hactl {
 // Main Functions
 func (controlCenter hactl) SendCommands(msg string) {
 	topic := "hacmd/cmd"
+	fmt.Println(time.Now().Format(time.RFC850) + " Sending command " + msg + " to " + topic)
 	publishTo(topic, controlCenter.mqttClient, msg)
 }
 func (controlCenter hactl) UpdateSensors(hubid string, sensorVal map[string]interface{}) {
@@ -130,6 +131,20 @@ func ReadCtrl(configstr string) (procID string, hubid string, action string, com
 	action = res.Action
 	command = res.Command
 	results = res.Results
+	return
+}
+func (controlCenter hactl) ReadJob(jobStr string) (jobid int, trigger string, procid string, action string, actiontype string, commands []Commands) {
+	data := jobsStruct{}
+	err := json.Unmarshal([]byte(jobStr), &data)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	jobid = data.JobID
+	trigger = data.Trigger
+	procid = data.ProcID
+	action = data.Action
+	actiontype = data.ActionType
+	commands = data.Commands
 	return
 }
 func ReadConfig(configstr string) (user string, pass string, broker string, procID, mongoDB string) {
@@ -283,8 +298,6 @@ func Disconnect(client mqtt.Client) {
 	time.Sleep(1 * time.Second)
 }
 func publishTo(topic string, client mqtt.Client, msg string) {
-	// Send Configuration
-	fmt.Println(time.Now().Format(time.RFC850) + " Sending command " + msg + " to " + topic)
 	// Publish Response
 	token := client.Publish(topic, 0, false, msg)
 	token.Wait()

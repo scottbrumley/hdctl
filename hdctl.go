@@ -53,13 +53,22 @@ func main() {
 				continue
 			}
 
-		//Issue Sensor Commands
+		//Check Jobs in Mongo DB every 60 seconds
 		case <-time.After(60 * time.Second):
 			fmt.Println("Check Jobs")
-			//results := hdctl.find_mongoDB(mongoClient, "homeSysDB", "jobs", brokerID)
 			results := controlCenter.FindJobs(controlCenter.ProcID, "command")
-			for _, job := range results {
-				go controlCenter.SendCommands(job)
+
+			if results != nil {
+				for _, job := range results {
+					myJobID, myTrigger, myProcID, myAction, myActionType, myCommands := controlCenter.ReadJob(job)
+					fmt.Println(myJobID)
+					fmt.Println(myTrigger)
+					fmt.Println(myProcID)
+					fmt.Println(myAction)
+					fmt.Println(myActionType)
+					fmt.Println(myCommands)
+					go controlCenter.SendCommands(job)
+				}
 			}
 		}
 	}
