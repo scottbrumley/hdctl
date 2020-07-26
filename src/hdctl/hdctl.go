@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/eclipse/paho.mqtt.golang"
+	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -113,9 +114,32 @@ func homePage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Welcome to the HomePage!")
 	fmt.Println("Endpoint Hit: homePage")
 }
+func pingPage(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Welcome to the Ping Page!")
+	fmt.Println("Endpoint Hit: Ping")
+}
+
+func lutronPage(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Welcome to the Lutron Page!")
+	fmt.Println("Endpoint Hit: Lutron")
+}
+
+func huePage(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Welcome to the Hue Page!")
+	fmt.Println("Endpoint Hit: Hue")
+}
+
 func handleRequests() {
-	http.HandleFunc("/", homePage)
-	log.Fatal(http.ListenAndServe(":10000", nil))
+	myRouter := mux.NewRouter().StrictSlash(true)
+	// replace http.HandleFunc with myRouter.HandleFunc
+	myRouter.HandleFunc("/", homePage)
+	myRouter.HandleFunc("/ping", pingPage)
+	myRouter.HandleFunc("/lutron", lutronPage)
+	myRouter.HandleFunc("/hue", huePage)
+	// finally, instead of passing in nil, we want
+	// to pass in our newly created router as the second
+	// argument
+	log.Fatal(http.ListenAndServe(":10000", myRouter))
 }
 func (controlCenter hactl) SendCommands(msg string) {
 	topic := "hacmd/cmd"
