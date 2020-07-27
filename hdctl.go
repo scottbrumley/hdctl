@@ -60,13 +60,16 @@ func main() {
 
 			if results != nil {
 				for _, job := range results {
-					myJobID, myTrigger, myProcID, myAction, myActionType, myCommands := controlCenter.ReadJob(job)
-					fmt.Println(myJobID)
-					fmt.Println(myTrigger)
-					fmt.Println(myProcID)
-					fmt.Println(myAction)
-					fmt.Println(myActionType)
-					fmt.Println(myCommands)
+					/*
+						myJobID, myTrigger, myProcID, myAction, myActionType, myCommands := controlCenter.ReadJob(job)
+						fmt.Println(myJobID)
+						fmt.Println(myTrigger)
+						fmt.Println(myProcID)
+						fmt.Println(myAction)
+						fmt.Println(myActionType)
+						fmt.Println(myCommands)
+
+					*/
 					go controlCenter.SendCommands(job)
 				}
 			}

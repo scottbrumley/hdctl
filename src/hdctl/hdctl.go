@@ -77,6 +77,17 @@ type Commands struct {
 	VendorTag string `json:"vendortag"`
 }
 
+type LutronCommands struct {
+	Id        string `json:"id"`
+	Ipadd     string `json:"ipadd"`
+	Name      string `json:"name"`
+	Value     string `json:"value"`
+	Face      string `json:"face"`
+	Type      string `json:"type"`
+	Action    string `json:"action"`
+	VendorTag string `json:"vendortag"`
+}
+
 type hacmdInit struct {
 	ProcID     string                 `json:"procid"`
 	HubID      string                 `json:"hubid"`
@@ -118,17 +129,14 @@ func pingPage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Welcome to the Ping Page!")
 	fmt.Println("Endpoint Hit: Ping")
 }
-
 func lutronPage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Welcome to the Lutron Page!")
 	fmt.Println("Endpoint Hit: Lutron")
 }
-
 func huePage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Welcome to the Hue Page!")
 	fmt.Println("Endpoint Hit: Hue")
 }
-
 func handleRequests() {
 	myRouter := mux.NewRouter().StrictSlash(true)
 	// replace http.HandleFunc with myRouter.HandleFunc
@@ -279,7 +287,9 @@ func find_mongoDB(mongoClient *mongo.Client, dbStr string, collectionStr string,
 	}
 
 	cur, error := Collection.Find(ctx, searchStr)
+
 	var alljobs []*jobsStruct
+
 	//Loops over the cursor stream and appends to result array
 	for cur.Next(context.TODO()) {
 		var jobResult jobsStruct
