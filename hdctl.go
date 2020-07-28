@@ -15,11 +15,9 @@ func main() {
 
 	if len(os.Args[1:]) > 0 {
 		if os.Args[1] != "" {
-			fmt.Println("Arg[1]: " + os.Args[1])
 			configStr = os.Args[1]
 		}
 	}
-
 	controlCenter := hdctl.New(configStr)
 
 	for {
@@ -31,7 +29,7 @@ func main() {
 				if action == "initiate" {
 					fmt.Println(procID + " Initiated")
 					fmt.Println(time.Now().Format(time.RFC850) + " hacmd/ctrl just checked in.")
-					results := controlCenter.FindJobs(controlCenter.ProcID, "config")
+					results := controlCenter.FindJobs(procID, "config")
 					for _, job := range results {
 						go controlCenter.SendCommands(job)
 					}
