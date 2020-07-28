@@ -4,12 +4,22 @@ import (
 	"encoding/json"
 	"fmt"
 	"hdctl"
+	"os"
 	"strings"
 	"time"
 )
 
 func main() {
-	controlCenter := hdctl.New("config.json")
+
+	configStr := "config.json"
+
+	if len(os.Args[1:]) > 0 {
+		if os.Args[1] != "" {
+			fmt.Println("Arg[1]: " + os.Args[1])
+			configStr = os.Args[1]
+		}
+	}
+	controlCenter := hdctl.New(configStr)
 
 	for {
 		select {
