@@ -12,4 +12,4 @@ RUN go get "go.mongodb.org/mongo-driver/mongo"
 RUN go get "go.mongodb.org/mongo-driver/mongo/options"
 RUN go build *.go
 
-CMD /hdctl/hdctl
+CMD /hdctl/hdctl /hdctl/config.json
