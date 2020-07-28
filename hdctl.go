@@ -19,6 +19,7 @@ func main() {
 			configStr = os.Args[1]
 		}
 	}
+
 	controlCenter := hdctl.New(configStr)
 
 	for {

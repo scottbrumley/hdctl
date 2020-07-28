@@ -107,7 +107,7 @@ type hactl struct {
 // Main Functions
 func New(configStr string) hactl {
 	ch1 := make(chan string)
-	user, pass, broker, procID, mongoDB := ReadConfig("config.json")
+	user, pass, broker, procID, mongoDB := ReadConfig(configStr)
 	mqttClient := connect_mqtt(broker, user, pass)
 	mongoClient := connect_mongoDB(mongoDB)
 
