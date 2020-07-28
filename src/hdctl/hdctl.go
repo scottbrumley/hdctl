@@ -108,7 +108,13 @@ type hactl struct {
 func New(configStr string) hactl {
 	ch1 := make(chan string)
 	user, pass, broker, procID, mongoDB := ReadConfig(configStr)
-	mqttClient := connect_mqtt(broker, user, pass)
+	// If procID does not existing in config.json then use ProcUUID and Write out new configuration file
+	if len(procID) <= 0 {
+		procID = procUUID()
+		WriteConfig("config.json", user, pass, broker, procID)
+	}
+
+	mqttClient := connect_mqtt(procID, broker, user, pass)
 	mongoClient := connect_mongoDB(mongoDB)
 
 	//Checking the connection
@@ -148,6 +154,12 @@ func handleRequests() {
 	// to pass in our newly created router as the second
 	// argument
 	log.Fatal(http.ListenAndServe(":10000", myRouter))
+}
+func WriteConfig(configstr string, user string, pass string, broker string, procID string) {
+
+	data := []byte("{\n\t\"user\": \"" + user + "\",\n\t\"pass\": \"" + pass + "\",\n\t\"broker\": \"" + broker + "\",\n\t\"procID\": \"" + procID + "\"\n}")
+	_ = ioutil.WriteFile(configstr, data, 0644)
+
 }
 func (controlCenter hactl) SendCommands(msg string) {
 	topic := "hacmd/cmd"
@@ -203,7 +215,7 @@ func ReadConfig(configstr string) (user string, pass string, broker string, proc
 	mongoDB = data["mongoDB"].(string)
 	return
 }
-func ProcUUID() (uuid string) {
+func procUUID() (uuid string) {
 	b := make([]byte, 16)
 	_, err := rand.Read(b)
 	if err != nil {
@@ -213,12 +225,12 @@ func ProcUUID() (uuid string) {
 		b[0:4], b[4:6], b[6:8], b[8:10], b[10:])
 	return
 }
-func connect_mqtt(broker string, user string, pass string) (client mqtt.Client) {
+func connect_mqtt(procid string, broker string, user string, pass string) (client mqtt.Client) {
 
 	//create a ClientOptions struct setting the broker address, clientid, turn
 	//off trace output and set the default message handler
 	opts := mqtt.NewClientOptions().AddBroker("tcp://" + broker)
-	opts.SetClientID(ProcUUID())
+	opts.SetClientID(procid)
 	opts.SetDefaultPublishHandler(f)
 	opts.SetUsername(user)
 	opts.SetPassword(pass)
