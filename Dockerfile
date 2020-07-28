@@ -2,7 +2,7 @@ FROM golang:rc-alpine3.12
 
 RUN apk add git
 RUN cd / && git clone https://github.com/scottbrumley/hdctl.git
-ADD config.json /hdctl/config.json
+#ADD config.json /hdctl/config.json
 WORKDIR /hdctl
 ENV GOPATH=/hdctl/
 RUN go get "github.com/eclipse/paho.mqtt.golang"
